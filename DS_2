@@ -1,0 +1,177 @@
+import numpy as np
+import time
+
+
+# LU-разложение матрицы A
+def lu_decomposition(A):
+    n = len(A)
+
+    # U сначала будет как наша матрица A
+    U = A.copy().astype(float)
+
+    # L сначала просто единичная матрица
+    L = np.eye(n)
+
+    for k in range(n - 1):
+        for i in range(k + 1, n):
+
+            # тут считаем коэффициент, чтобы потом занулить число снизу
+            m = U[i, k] / U[k, k]
+
+            # записываем этот коэффициент в L
+            L[i, k] = m
+
+            # зануляем элементы под диагональю
+            for j in range(k, n):
+                U[i, j] = U[i, j] - m * U[k, j]
+
+    return L, U
+
+
+# Прямая подстановка решение Ly = b
+def forward_substitution(L, b):
+    n = len(b)
+    y = np.zeros(n)
+
+    # тут идем сверху вниз и постепенно находим y
+    for i in range(n):
+        s = 0
+
+        for j in range(i):
+            s += L[i, j] * y[j]
+
+        y[i] = (b[i] - s) / L[i, i]
+
+    return y
+
+
+# Обратная подстановка решение Ux = y
+def backward_substitution(U, y):
+    n = len(y)
+    x = np.zeros(n)
+
+    # тут наоборот идем снизу вверх и находим x
+    for i in range(n - 1, -1, -1):
+        s = 0
+
+        for j in range(i + 1, n):
+            s += U[i, j] * x[j]
+
+        x[i] = (y[i] - s) / U[i, i]
+
+    return x
+
+
+# Решение системы с помощью готового LU-разложения
+def solve_lu(L, U, b):
+
+    # сначала решаем Ly = b
+    y = forward_substitution(L, b)
+
+    # потом уже Ux = y
+    x = backward_substitution(U, y)
+
+    return x
+
+
+# Обычный метод Гаусса
+def gauss(A, b):
+    A = A.copy().astype(float)
+    b = b.copy().astype(float)
+
+    n = len(b)
+
+    # Прямой ход
+    for k in range(n - 1):
+        for i in range(k + 1, n):
+
+            m = A[i, k] / A[k, k]
+
+            # тут так же зануляем элементы снизу
+            for j in range(k, n):
+                A[i, j] = A[i, j] - m * A[k, j]
+
+            # с b надо сделать то же самое
+            b[i] = b[i] - m * b[k]
+
+    # Обратный ход
+    x = backward_substitution(A, b)
+
+    return x
+
+
+# Исходные данные
+
+# матрица A у нас одна и та же для всех систем
+A = np.array([
+    [2, 1, 1],
+    [4, 3, 3],
+    [8, 7, 9]
+], dtype=float)
+
+
+# разные правые части b
+B = [
+    np.array([4, 10, 24], dtype=float),
+    np.array([1, 2, 3], dtype=float),
+    np.array([3, 7, 19], dtype=float)
+]
+
+
+# Обычный метод Гаусса
+
+start = time.perf_counter()
+
+# тут каждую систему решаем заново обычным Гауссом
+for b in B:
+    gauss(A, b)
+
+time_gauss = time.perf_counter() - start
+
+
+# LU-метод
+
+start = time.perf_counter()
+
+# тут один раз делим A на L и U
+L, U = lu_decomposition(A)
+
+solutions = []
+
+# а потом для каждого нового b просто находим решение через готовые L и U
+for b in B:
+    x = solve_lu(L, U, b)
+    solutions.append(x)
+
+time_lu = time.perf_counter() - start
+
+
+# --------------------------------------------------
+
+print("Матрица L:")
+print(L)
+
+print("\nМатрица U:")
+print(U)
+
+# тут проверяем что если перемножить L и U, то получится наша A
+print("\nПроверка A = L * U:")
+print(L @ U)
+
+
+print("\nРешения систем:")
+
+for i in range(len(B)):
+    print("\nb =", B[i])
+    print("x =", solutions[i])
+
+
+print("\nВремя обычного метода Гаусса:")
+print(time_gauss)
+
+print("\nВремя LU-метода:")
+print(time_lu)
+
+# смотрим во сколько раз LU получилось быстрее
+print("\nВыигрыш времени:")
+print(time_gauss / time_lu)
