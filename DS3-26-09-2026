@@ -1,0 +1,129 @@
+#Метод прогонки состоит из двух частей, где прямой ход считывание коэффицентов, а во второй части обратный ход 
+#1Ч мы выражаем x1 и x2 в строках 15-16, а потом складывем коэффиценты в alpha и beta, чтобы потом найти по ним х 
+#на обратном ходе. Далее в цикле фор начинается прямой ход, где мы считаем коэффицент alpha, а потом и beta. 
+#2Ч 2 часть это обратный ход, мы создаем там массив, чтобы записывать найденный х и с конца будем искать его,
+#используя цикл фор.
+import numpy as np
+
+
+def progonka(A, B, C, F):
+    n = len(C)
+
+    alpha = np.zeros(n + 1)
+    beta = np.zeros(n + 1)
+
+    alpha[1] = B[0] / C[0]
+    beta[1] = F[0] / C[0]
+
+    for i in range(1, n):
+        d = C[i] - A[i] * alpha[i]
+
+        if i < n - 1:
+            alpha[i + 1] = B[i] / d
+
+        beta[i + 1] = (F[i] + A[i] * beta[i]) / d
+
+    x = np.zeros(n)
+
+    x[n - 1] = beta[n]
+
+    for i in range(n - 2, -1, -1):
+        x[i] = alpha[i + 1] * x[i + 1] + beta[i + 1]
+
+    return x
+
+
+
+A = np.array([0, 1, 1], dtype=float)
+B = np.array([1, 1, 0], dtype=float)
+C = np.array([-2, -3, -2], dtype=float)
+F = np.array([-4, -9, -8], dtype=float)
+
+
+x = progonka(A, B, C, F)
+
+print("Решение:")
+print(x)
+
+
+print("====================================================")
+#Метод простой итерации
+#Сначала приводим систему Ax=b к виду x=Bx+c, для этого создаем матрицу B и вектор c
+#и заполняем их коэффициентами из матрицы A и вектора b.
+#Потом считаем норму матрицы B, чтобы проверить будет ли метод сходиться.
+#Дальше первое приближение x берем равным c и в цикле считаем новые значения x по формуле x=Bx+c.
+#После каждой итерации сравниваем новый x со старым и когда разница становится достаточно маленькой,
+#останавливаем цикл и выводим найденное решение и количество итераций.
+
+import numpy as np
+
+
+A = np.array([
+    [10, -1, 2],
+    [-1, 11, -1],
+    [2, -1, 10]
+], dtype=float)
+
+b = np.array([6, 25, -11], dtype=float)
+
+eps = 0.001
+n = len(b)
+
+
+B = np.zeros((n, n))
+c = np.zeros(n)
+
+for i in range(n):
+    c[i] = b[i] / A[i, i]
+
+    for j in range(n):
+        if i != j:
+            B[i, j] = -A[i, j] / A[i, i]
+
+
+print("Матрица B:")
+print(B)
+
+print("\nВектор c:")
+print(c)
+
+
+q = 0
+
+for i in range(n):
+    s = 0
+
+    for j in range(n):
+        s += abs(B[i, j])
+
+    if s > q:
+        q = s
+
+
+print("\nНорма B:")
+print(q)
+
+
+x_old = c.copy()
+
+k = 0
+
+while True:
+
+    x_new = B @ x_old + c
+
+    k += 1
+
+    difference = np.max(np.abs(x_new - x_old))
+
+    if difference < ((1 - q) / q) * eps:
+        break
+
+    x_old = x_new
+
+
+print("\nРешение:")
+print(x_new)
+
+print("\nКоличество итераций:")
+print(k)
