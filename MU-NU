@@ -1,0 +1,86 @@
+#мы исследуем функцию phi(x)=mu*sqrt(x)*(1-nu*sqrt(x)).
+#сначала считаем итерации для разных mu и nu и смотрим, сходится метод или нет.
+#потом для каждого набора параметров строим 2 графика:
+#1) график функции phi(x) и прямой y=x
+#2) график итерационного процесса x_k по номеру итерации k
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def phi(x, mu, nu):
+    return mu * np.sqrt(x) * (1 - nu * np.sqrt(x))
+
+
+def iteration(mu, nu, x0=0.1, eps=0.000001, max_iter=100):
+    if x0 < 0:
+        return None, 0, "начальное x меньше 0", []
+
+    x = x0
+    values = [x]
+
+    for k in range(1, max_iter + 1):
+        x_new = phi(x, mu, nu)
+
+        # если вышли в отрицательное значение, дальше sqrt нельзя
+        if x_new < 0:
+            values.append(x_new)
+            return x_new, k, "вышли из области sqrt", values
+
+        values.append(x_new)
+
+        # если новое и старое x почти одинаковые, считаем что сошлось
+        if abs(x_new - x) < eps:
+            return x_new, k, "сошлось", values
+
+        x = x_new
+
+    return x, max_iter, "не сошлось", values
+
+
+tests = [
+    [1, 1, 0.1],
+    [1, 2, 0.1],
+    [2, 0.5, 0.1],
+    [1, 3.5, 0.01],
+    [1, 4, 0.1]
+]
+
+
+for test in tests:
+    mu = test[0]
+    nu = test[1]
+    x0 = test[2]
+
+    x, iterations, result, values = iteration(mu, nu, x0)
+
+    print("\n-----------------------------")
+    print("mu =", mu)
+    print("nu =", nu)
+    print("Начальное x =", x0)
+    print("Результат =", x)
+    print("Количество итераций =", iterations)
+    print("Состояние =", result)
+
+    # строим график функции phi(x)
+    x_plot = np.linspace(0, 2, 400)
+    y_plot = phi(x_plot, mu, nu)
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(x_plot, y_plot, label='phi(x)')
+    plt.plot(x_plot, x_plot, label='y = x')
+    plt.title(f'График функции, mu={mu}, nu={nu}')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+    # строим график итераций x_k
+    plt.figure(figsize=(8, 5))
+    plt.plot(range(len(values)), values, marker='o')
+    plt.title(f'Итерационный процесс, mu={mu}, nu={nu}')
+    plt.xlabel('Номер итерации k')
+    plt.ylabel('x_k')
+    plt.grid(True)
+    plt.show()
