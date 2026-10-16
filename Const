@@ -1,0 +1,32 @@
+import math
+
+mu = [2.0, 1 + math.sqrt(5)]
+
+# Расчет константы Фейгенбаума
+for n in range(2, 9):
+    a = mu[-1]
+    b = a + (mu[-1] - mu[-2]) * 0.5
+
+    # Метод бисекции
+    for i in range(60):
+        c = (a + b) / 2
+
+        x = 0.5
+        for j in range(2 ** n):
+            x = c * x * (1 - x)
+
+        if x > 0.5:
+            a = c
+        else:
+            b = c
+
+    mu.append((a + b) / 2)
+
+    # вычисление самой константы
+    delta = (mu[-2] - mu[-3]) / (mu[-1] - mu[-2])
+
+    print("n =", n, "mu =", round(mu[-1], 8),
+          "delta =", round(delta, 8))
+
+print("\nКонстанта Фейгенбаума =", round(delta, 8))
+print("Теоретическое значение = 4.66920161")
